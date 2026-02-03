@@ -4,6 +4,11 @@ from bs4 import BeautifulSoup
 import uvicorn
 import re
 from fastapi.middleware.cors import CORSMiddleware
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("scraper")
 
 app = FastAPI(title="UAF Result Scraper API")
 
@@ -93,7 +98,12 @@ async def fetch_uaf_results(registration_number: str = Query(..., alias="registr
                 debug_info = f"Found {len(tables)} tables. Target table found: {target_table is not None}. "
                 if target_table:
                    debug_info += f"Rows: {len(target_table.find_all('tr'))}. "
-                # debug_info += f"Preview: {res_response.text[:200]}"
+                
+                # Save HTML for debugging
+                with open(r"c:\xampp\htdocs\debug_last_fail.html", "w", encoding="utf-8") as f:
+                    f.write(res_response.text)
+                logger.warning(f"No courses found for {registration_number}. HTML saved to debug_last_fail.html")
+                
                 raise HTTPException(status_code=404, detail=f"No course results found. Debug: {debug_info}")
 
             return {
@@ -108,15 +118,19 @@ async def fetch_uaf_results(registration_number: str = Query(..., alias="registr
             }
 
     except HTTPException as e:
+        logger.error(f"HTTPException: {e.detail}")
         raise e
     except httpx.HTTPError as e:
+        logger.error(f"HTTPX Error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch from UAF: {str(e)}")
     except Exception as e:
+        import traceback
+        error_msg = f"Scraping error: {str(e)}\n{traceback.format_exc()}"
+        logger.error(error_msg)
         raise HTTPException(status_code=500, detail=f"Scraping error: {str(e)}")
 
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 8081))
     uvicorn.run(app, host="0.0.0.0", port=port)
-
 

@@ -16,8 +16,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app = FastAPI(title="UAF Result Scraper API")
-
 UAF_LOGIN_URL = "https://lms.uaf.edu.pk/login/index.php"
 UAF_RESULT_URL = "https://lms.uaf.edu.pk/course/uaf_student_result.php"
 
@@ -117,5 +115,8 @@ async def fetch_uaf_results(registration_number: str = Query(..., alias="registr
         raise HTTPException(status_code=500, detail=f"Scraping error: {str(e)}")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8081)
+    import os
+    port = int(os.environ.get("PORT", 8081))
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
 

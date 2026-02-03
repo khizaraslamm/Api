@@ -3,6 +3,18 @@ import httpx
 from bs4 import BeautifulSoup
 import uvicorn
 import re
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(title="UAF Result Scraper API")
+
+# Add this block right after 'app = FastAPI()'
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # In production, replace "*" with your InfinityFree URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app = FastAPI(title="UAF Result Scraper API")
 
@@ -106,3 +118,4 @@ async def fetch_uaf_results(registration_number: str = Query(..., alias="registr
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8081)
+
